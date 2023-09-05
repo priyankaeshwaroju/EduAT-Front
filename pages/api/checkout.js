@@ -32,7 +32,6 @@ export default async function handler(req, res) {
     <p>Here are the details of your request:</p>
     <!-- Include any loan request details here -->
   `;
-  const recipients = [email, "priyankae.be21@uceou.edu"];
 
   for (const productId of uniqueIds) {
     const productInfo = productsInfos.find(
@@ -54,6 +53,7 @@ export default async function handler(req, res) {
     }
   }
 
+  const recipients = [email, "priyankae.be21@uceou.edu"];
   const msg = {
     to: recipients, // Recipient's email address
     from: "priyankaeshwaroju325@gmail.com", // Sender's email address (must be a verified sender in SendGrid)
@@ -63,6 +63,8 @@ export default async function handler(req, res) {
   };
 
   try {
+    await sgMail.send(msg);
+    console.log("Email sent successfully");
     await mongooseConnect();
     const order = new Order({
       name,
@@ -74,12 +76,12 @@ export default async function handler(req, res) {
       line_items, // Include order line items
     });
     await order.save();
-
-    await sgMail.send(msg);
-    console.log("Email sent successfully");
     res.status(200).json({ message: "Loan request submitted successfully" });
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error(
+      "Error sending email:",
+      error.response?.body?.errors || error.message
+    );
     res.status(500).json({ message: "Error submitting loan request" });
   }
 }
