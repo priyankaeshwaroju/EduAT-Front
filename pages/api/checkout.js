@@ -24,6 +24,7 @@ export default async function handler(req, res) {
   const uniqueIds = [...new Set(productsIds)];
   const productsInfos = await Product.find({ _id: uniqueIds });
 
+  let line_items = [];
   let emailContent = `
     <p>Hello ${name},</p>
     <p>Your loan request has been submitted successfully.</p>
@@ -31,9 +32,7 @@ export default async function handler(req, res) {
     <p>Here are the details of your request:</p>
     <!-- Include any loan request details here -->
   `;
-  // const recipients = [email, "priyankae.be21@uceou.edu"];
-
-  let line_items = [];
+  const recipients = [email, "priyankae.be21@uceou.edu"];
 
   for (const productId of uniqueIds) {
     const productInfo = productsInfos.find(
@@ -56,7 +55,7 @@ export default async function handler(req, res) {
   }
 
   const msg = {
-    to: email, // Recipient's email address
+    to: recipients, // Recipient's email address
     from: "priyankaeshwaroju325@gmail.com", // Sender's email address (must be a verified sender in SendGrid)
     subject: "Loan Request Confirmation",
     text: "Thank you for your order!", // Text content of the email
