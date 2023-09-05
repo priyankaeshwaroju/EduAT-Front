@@ -120,36 +120,6 @@ export default function AccountPage() {
                     )}
                   </>
                 )}
-                {/* {activeTab === "Wishlist" && (
-                  <>
-                    {!wishlistLoaded && <Spinner fullWidth={true} />}
-                    {wishlistLoaded && (
-                      <>
-                        <WishedProductsGrid>
-                          {wishedProducts.length > 0 &&
-                            wishedProducts.map((wp) => (
-                              <ProductBox
-                                key={wp._id}
-                                {...wp}
-                                wished={true}
-                                onRemoveFromWishlist={
-                                  productRemovedFromWishlist
-                                }
-                              />
-                            ))}
-                        </WishedProductsGrid>
-                        {wishedProducts.length === 0 && (
-                          <>
-                            {session && <p>Your wishlist is empty</p>}
-                            {!session && (
-                              <p>Login to add products to your wishlist</p>
-                            )}
-                          </>
-                        )}
-                      </>
-                    )}
-                  </>
-                )} */}
               </WhiteBox>
             </RevealWrapper>
           </div>
