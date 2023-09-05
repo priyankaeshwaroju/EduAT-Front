@@ -115,8 +115,8 @@ export default function CategoryPage({
                   setFiltersChanged(true);
                 }}
               >
-                <option value="price-asc">price, lowest first</option>
-                <option value="price-desc">price, highest first</option>
+                {/* <option value="price-asc">price, lowest first</option> */}
+                {/* <option value="price-desc">price, highest first</option> */}
                 <option value="_id-desc">newest first</option>
                 <option value="_id-asc">oldest first</option>
               </select>

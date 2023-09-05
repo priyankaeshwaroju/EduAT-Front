@@ -1,10 +1,9 @@
 import { mongooseConnect } from "@/lib/mongoose";
 import { Product } from "@/models/Product";
 import { Order } from "@/models/Order";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { Setting } from "@/models/Setting";
-const stripe = require("stripe")(process.env.STRIPE_SK);
+
+const sgMail = require("@sendgrid/mail");
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -25,7 +24,17 @@ export default async function handler(req, res) {
   const uniqueIds = [...new Set(productsIds)];
   const productsInfos = await Product.find({ _id: uniqueIds });
 
+  let emailContent = `
+    <p>Hello ${name},</p>
+    <p>Your loan request has been submitted successfully.</p>
+    <p>Your Delivery Address: ${streetAddress}, ${postalCode}, ${city}, ${country}</p>
+    <p>Here are the details of your request:</p>
+    <!-- Include any loan request details here -->
+  `;
+  // const recipients = [email, "priyankae.be21@uceou.edu"];
+
   let line_items = [];
+
   for (const productId of uniqueIds) {
     const productInfo = productsInfos.find(
       (p) => p._id.toString() === productId
@@ -35,51 +44,43 @@ export default async function handler(req, res) {
       line_items.push({
         quantity,
         price_data: {
-          currency: "GBP",
+          // currency: "USD",
           product_data: { name: productInfo.title },
-          unit_amount: quantity * productInfo.price * 100,
+          // unit_amount: quantity * productInfo.price * 100,
         },
       });
+      emailContent += `
+        <p>Product: ${productInfo.title}</p>
+        <p>Quantity: ${quantity}</p>`;
     }
   }
 
-  const session = await getServerSession(req, res, authOptions);
+  const msg = {
+    to: email, // Recipient's email address
+    from: "priyankaeshwaroju325@gmail.com", // Sender's email address (must be a verified sender in SendGrid)
+    subject: "Loan Request Confirmation",
+    text: "Thank you for your order!", // Text content of the email
+    html: emailContent, // HTML content of the email
+  };
 
-  const orderDoc = await Order.create({
-    line_items,
-    name,
-    email,
-    city,
-    postalCode,
-    streetAddress,
-    country,
-    paid: false,
-    userEmail: session?.user?.email,
-  });
+  try {
+    await mongooseConnect();
+    const order = new Order({
+      name,
+      email,
+      city,
+      postalCode,
+      streetAddress,
+      country,
+      line_items, // Include order line items
+    });
+    await order.save();
 
-  const shippingFeeSetting = await Setting.findOne({ name: "shippingFee" });
-  const shippingFeeCents = parseInt(shippingFeeSetting.value || "0") * 100;
-
-  const stripeSession = await stripe.checkout.sessions.create({
-    line_items,
-    mode: "payment",
-    customer_email: email,
-    success_url: process.env.PUBLIC_URL + "/cart?success=1",
-    cancel_url: process.env.PUBLIC_URL + "/cart?canceled=1",
-    metadata: { orderId: orderDoc._id.toString() },
-    allow_promotion_codes: true,
-    shipping_options: [
-      {
-        shipping_rate_data: {
-          display_name: "shipping fee",
-          type: "fixed_amount",
-          fixed_amount: { amount: shippingFeeCents, currency: "GBP" },
-        },
-      },
-    ],
-  });
-
-  res.json({
-    url: stripeSession.url,
-  });
+    await sgMail.send(msg);
+    console.log("Email sent successfully");
+    res.status(200).json({ message: "Loan request submitted successfully" });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    res.status(500).json({ message: "Error submitting loan request" });
+  }
 }

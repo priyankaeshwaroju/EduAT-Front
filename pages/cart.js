@@ -98,7 +98,7 @@ export default function CartPage() {
   const [streetAddress, setStreetAddress] = useState("");
   const [country, setCountry] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
-  // const [shippingFee, setShippingFee] = useState(null);
+
   useEffect(() => {
     if (cartProducts.length > 0) {
       axios.post("/api/cart", { ids: cartProducts }).then((response) => {
@@ -108,18 +108,15 @@ export default function CartPage() {
       setProducts([]);
     }
   }, [cartProducts]);
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-    if (window?.location.href.includes("success")) {
-      setIsSuccess(true);
-      clearCart();
-    }
-    // axios.get("/api/settings?name=shippingFee").then((res) => {
-    //   setShippingFee(res.data.value);
-    // });
-  }, []);
+  // useEffect(() => {
+  //   if (typeof window === "undefined") {
+  //     return;
+  //   }
+  //   if (window?.location.href.includes("success")) {
+  //     setIsSuccess(true);
+  //     clearCart();
+  //   }
+  // }, []);
   useEffect(() => {
     if (!session) {
       return;
@@ -134,12 +131,19 @@ export default function CartPage() {
     });
   }, [session]);
   function moreOfThisProduct(id) {
-    addProduct(id);
+    const productCount = cartProducts.filter(
+      (productId) => productId === id
+    ).length;
+    if (productCount < 3) {
+      addProduct(id);
+    } else {
+      console.log(`You cannot add more than 3 of this product.`);
+    }
   }
   function lessOfThisProduct(id) {
     removeProduct(id);
   }
-  async function goToPayment() {
+  async function submitLoan() {
     const response = await axios.post("/api/checkout", {
       name,
       email,
@@ -149,8 +153,9 @@ export default function CartPage() {
       country,
       cartProducts,
     });
-    if (response.data.url) {
-      window.location = response.data.url;
+    if (response.status === 200) {
+      setIsSuccess(true);
+      clearCart();
     }
   }
   let productsTotal = 0;
@@ -189,7 +194,6 @@ export default function CartPage() {
                     <tr>
                       <th>Product</th>
                       <th>Quantity</th>
-                      {/* <th>Price</th> */}
                     </tr>
                   </thead>
                   <tbody>
@@ -219,25 +223,8 @@ export default function CartPage() {
                             +
                           </Button>
                         </td>
-                        {/* <td>
-                          $
-                          {cartProducts.filter((id) => id === product._id)
-                            .length * product.price}
-                        </td> */}
                       </tr>
                     ))}
-                    {/* <tr className="subtotal">
-                      <td colSpan={2}>Products</td>
-                      <td>${productsTotal}</td>
-                    </tr>
-                    <tr className="subtotal">
-                      <td colSpan={2}>Shipping</td>
-                      <td>${shippingFee}</td>
-                    </tr>
-                    <tr className="subtotal total">
-                      <td colSpan={2}>Total</td>
-                      <td>${productsTotal + parseInt(shippingFee || 0)}</td>
-                    </tr> */}
                   </tbody>
                 </Table>
               )}
@@ -291,7 +278,7 @@ export default function CartPage() {
                   name="country"
                   onChange={(ev) => setCountry(ev.target.value)}
                 />
-                <Button black block onClick={goToPayment}>
+                <Button black block onClick={submitLoan}>
                   Submit Loan Request
                 </Button>
               </Box>

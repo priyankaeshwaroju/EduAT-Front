@@ -28,7 +28,7 @@ export default function SingleOrder({ line_items, createdAt, ...rest }) {
   return (
     <StyledOrder>
       <div>
-        <time>{new Date(createdAt).toLocaleString("sv-SE")}</time>
+        <time>{new Date(createdAt).toLocaleString("en-GB")}</time>
         <Address>
           {rest.name}
           <br />

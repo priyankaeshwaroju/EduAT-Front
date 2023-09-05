@@ -119,7 +119,7 @@ export default function ProductReviews({ product }) {
                       defaultHowMany={review.stars}
                     />
                     <time>
-                      {new Date(review.createdAt).toLocaleString("sv-SE")}
+                      {new Date(review.createdAt).toLocaleString("en-GB")}
                     </time>
                   </ReviewHeader>
                   <h3>{review.title}</h3>
